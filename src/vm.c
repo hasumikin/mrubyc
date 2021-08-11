@@ -95,6 +95,9 @@ static void not_supported(void)
 */
 static int send_by_name( struct VM *vm, const char *method_name, mrbc_value *regs, int a, int c, int is_sendb )
 {
+if (strncmp(method_name, "start!", 6) == 0) {
+  volatile xxx = 0;
+}
   mrbc_value *recv = &regs[a];
 
   // if SENDV or SENDVB, params are in one Array
