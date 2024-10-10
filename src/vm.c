@@ -111,13 +111,23 @@ static void send_by_name( struct VM *vm, mrbc_sym sym_id, int a, int c )
   mrbc_class *cls = find_class_by_object(recv);
   mrbc_method method;
   if( mrbc_find_method( &method, cls, sym_id ) == 0 ) {
-    mrbc_raisef(vm, MRBC_CLASS(NoMethodError),
-		"undefined local variable or method '%s' for %s",
-		mrbc_symid_to_str(sym_id), mrbc_symid_to_str( cls->sym_id ));
-    if( vm->callinfo_tail != 0 ) {
-      vm->exception.exception->method_id = vm->callinfo_tail->method_id;
+    mrbc_sym method_missing_id = mrbc_str_to_symid("method_missing");
+    if( mrbc_find_method( &method, cls, method_missing_id ) == 0 ) {
+      mrbc_raisef(vm, MRBC_CLASS(NoMethodError),
+        "undefined local variable or method '%s' for %s",
+        mrbc_symid_to_str(sym_id), mrbc_symid_to_str( cls->sym_id ));
+      if( vm->callinfo_tail != 0 ) {
+        vm->exception.exception->method_id = vm->callinfo_tail->method_id;
+      }
+      return;
+    } else {
+      for(int i = narg + 1; 0 < i ; i--) {
+        recv[i+1] = recv[i];
+      }
+      recv[1] = mrbc_symbol_value(sym_id);
+      sym_id = method_missing_id;
+      narg++;
     }
-    return;
   }
 
   // call C function and return.
